@@ -1,9 +1,10 @@
 Kitt development docs
 =====================
 
-Chrome API and manifest compatibility coverage
+[Chrome API whitelist](./ChromeApis.md)
 
-**Work in progress. Check back often!**
+[Chrome manifest compatibility](./ChromeBundleManifest.md)
+
 
 
 
