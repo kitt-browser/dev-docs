@@ -237,6 +237,10 @@ Fully implemented subset:
 
 ### [`chrome.webRequest`](https://developer.chrome.com/extensions/webRequest)
 
+> **WARNING:** if you declare any of the following listeners to blocking behavior, do not use `alert()` for debugging the listener functions! Kitt will display the alert but the UI will deadlock afterwards! This is not a Kitt bug/deficiency, but an unavoidable effect of `UIWebView` main thread only invocability. Main thread is also the UI rendering thread.
+
+### onBeforeRequest.addListener
+
     chrome.webRequest.onBeforeRequest.addListener(callback, filter, opt_extraInfoSpec);
     
 `callback` receives detail object with all properties as [documented in Chrome](http://developer.chrome.com/extensions/webRequest#event-onBeforeRequest) but with some limitations:
@@ -246,8 +250,23 @@ Fully implemented subset:
 - `type` fixed to "_main_frame_"
 - `requestBody` is null
 
-`callback` response object recognizes `cancel` and `redirectUrl` parameters
+`BlockingResponse` object recognizes `cancel` and `redirectUrl` parameters
 
 `requestfilter` supports only `urls`
 
 `opt_extraInfoSpec` flag `blocking` is fully supported
+
+### onHeadersReceived.addListener
+
+    chrome.webRequest.onHeadersReceived.addListener(callback, filter, opt_extraInfoSpec);
+
+`callback` receives detail object with the same limitations as documented in **onBeforeRequest**, with addition of `responseHeaders`
+
+`BlockingResponse` object recognizes `cancel`, `redirectUrl` and `responseHeaders`
+
+
+### handlerBehaviorChanged
+
+    chrome.webRequest.handlerBehaviorChanged(function callback);
+
+Clears the `UIWebView` cache, so it is expensive. Use reasonably as the Chrome doc suggests.
