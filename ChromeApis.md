@@ -196,7 +196,7 @@ only `path` detail supported
 
 #### ```conditions```
 
-Declarative Web Request API supports a single condition type, [```RequestMatcher```](http://developer.chrome.com/extensions/declarativeWebRequest.html#type-RequestMatcher). This is a Chrome API design, not a Kitt limitation. Currently implemented criteria subset is [**events.UrlFilter**](http://developer.chrome.com/extensions/events.html#type-UrlFilter) with ```hostSuffix```.
+Declarative Web Request API supports a single condition type, [```RequestMatcher```](http://developer.chrome.com/extensions/declarativeWebRequest.html#type-RequestMatcher). This is a Chrome API design, not a Kitt limitation. The matcher criteria object [**events.UrlFilter**](http://developer.chrome.com/extensions/events.html#type-UrlFilter) is fully implemented.
 
     new chrome.declarativeWebRequest.RequestMatcher({
       url : { // type events.UrlFilter
@@ -270,3 +270,28 @@ Fully implemented subset:
     chrome.webRequest.handlerBehaviorChanged(function callback);
 
 Clears the `UIWebView` cache, so it is expensive. Use reasonably as the Chrome doc suggests.
+
+### [`chrome.webNavigation`](https://developer.chrome.com/extensions/webNavigation)
+
+For `filter` parameter, the `url` array objects type [**events.UrlFilter**](http://developer.chrome.com/extensions/events.html#type-UrlFilter) is fully implemented.
+
+In the lack of authoritative specification, the following behaviors were confirmed by testing against Chrome browser:
+
+- no filters defined means unrestricted match (matches all)
+- contrary to the spec wording _"Conditions that the URL ... must satisfy"_ which sounds like **AND** evaluation (all conditions must match), it is really **OR** evaluation (any condition match is enough)
+
+### onCreatedNavigationTarget.addListener
+
+    chrome.webNavigation.onCreatedNavigationTarget.addListener(function callback, object filters)
+
+The `callback` parameter `details` defines only `tabId`, `url` and `timeStamp`. 
+
+**`sourceTabId` and `sourceFrameId` is not supported yet.**
+
+### onBeforeNavigate.addListener
+
+    chrome.webNavigation.onBeforeNavigate.addListener(function callback, object filters)
+
+The `callback` parameter `details` defines only `tabId`, `url` and `timeStamp`. 
+
+**`frameId` and `parentFrameId` is not supported yet.**
