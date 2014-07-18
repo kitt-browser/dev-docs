@@ -46,13 +46,15 @@ Implemented with the following limitation of callback function:
 Fully supported
 
 ## [```chrome.tabs```](http://developer.chrome.com/extensions/tabs.html)
+
+**Tab** object referred throughout the API as callback parameter contains only `id`, `url` and `active`.
+
 ### query
 
     chrome.tabs.query(object queryInfo, function callback)
     
 ```queryInfo``` recognizes only one filtering property: `active` flag.
 
-**Tab** objects returned in ```callback``` contains only `id`, `url` and `active`.
 ### sendMessage
 
     chrome.tabs.sendMessage(integer tabId, any message, function responseCallback)
@@ -66,9 +68,19 @@ If called with nonexistent ```tabId```, nothing will happen. ```runtime.lastErro
 
     chrome.tabs.update(integer tabId, object updateProperties, function callback)
     
-`updateProperties` recognizes only `url` property
+`updateProperties` recognizes only `url` property.
 
-**Tab** object returned in ```callback``` contains only `id`, `url` and `active`.
+### create
+
+    chrome.tabs.create(object createProperties, function callback)
+    
+`createProperties` recognizes `index`, `url` and `active`.
+
+### remove
+
+    chrome.tabs.remove(integer or array of integer tabIds, function callback)
+
+Fully implemented.
 
 ## [```chrome.contextMenus```](http://developer.chrome.com/extensions/contextMenus.html)
 
