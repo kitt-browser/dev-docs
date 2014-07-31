@@ -46,13 +46,15 @@ Implemented with the following limitation of callback function:
 Fully supported
 
 ## [```chrome.tabs```](http://developer.chrome.com/extensions/tabs.html)
+
+**Tab** object referred throughout the API as callback parameter contains only `id`, `url` and `active`.
+
 ### query
 
     chrome.tabs.query(object queryInfo, function callback)
     
 ```queryInfo``` recognizes only one filtering property: `active` flag.
 
-**Tab** objects returned in ```callback``` contains only `id`, `url` and `active`.
 ### sendMessage
 
     chrome.tabs.sendMessage(integer tabId, any message, function responseCallback)
@@ -66,9 +68,19 @@ If called with nonexistent ```tabId```, nothing will happen. ```runtime.lastErro
 
     chrome.tabs.update(integer tabId, object updateProperties, function callback)
     
-`updateProperties` recognizes only `url` property
+`updateProperties` recognizes only `url` property.
 
-**Tab** object returned in ```callback``` contains only `id`, `url` and `active`.
+### create
+
+    chrome.tabs.create(object createProperties, function callback)
+    
+`createProperties` recognizes `index`, `url` and `active`.
+
+### remove
+
+    chrome.tabs.remove(integer or array of integer tabIds, function callback)
+
+Fully implemented.
 
 ## [```chrome.contextMenus```](http://developer.chrome.com/extensions/contextMenus.html)
 
@@ -196,7 +208,7 @@ only `path` detail supported
 
 #### ```conditions```
 
-Declarative Web Request API supports a single condition type, [```RequestMatcher```](http://developer.chrome.com/extensions/declarativeWebRequest.html#type-RequestMatcher). This is a Chrome API design, not a Kitt limitation. Currently implemented criteria subset is [**events.UrlFilter**](http://developer.chrome.com/extensions/events.html#type-UrlFilter) with ```hostSuffix```.
+Declarative Web Request API supports a single condition type, [```RequestMatcher```](http://developer.chrome.com/extensions/declarativeWebRequest.html#type-RequestMatcher). This is a Chrome API design, not a Kitt limitation. The matcher criteria object [**events.UrlFilter**](http://developer.chrome.com/extensions/events.html#type-UrlFilter) is fully implemented.
 
     new chrome.declarativeWebRequest.RequestMatcher({
       url : { // type events.UrlFilter
@@ -270,3 +282,28 @@ Fully implemented subset:
     chrome.webRequest.handlerBehaviorChanged(function callback);
 
 Clears the `UIWebView` cache, so it is expensive. Use reasonably as the Chrome doc suggests.
+
+### [`chrome.webNavigation`](https://developer.chrome.com/extensions/webNavigation)
+
+For `filter` parameter, the `url` array objects type [**events.UrlFilter**](http://developer.chrome.com/extensions/events.html#type-UrlFilter) is fully implemented.
+
+In the lack of authoritative specification, the following behaviors were confirmed by testing against Chrome browser:
+
+- no filters defined means unrestricted match (matches all)
+- contrary to the spec wording _"Conditions that the URL ... must satisfy"_ which sounds like **AND** evaluation (all conditions must match), it is really **OR** evaluation (any condition match is enough)
+
+### onCreatedNavigationTarget.addListener
+
+    chrome.webNavigation.onCreatedNavigationTarget.addListener(function callback, object filters)
+
+The `callback` parameter `details` defines only `tabId`, `url` and `timeStamp`. 
+
+**`sourceTabId` and `sourceFrameId` is not supported yet.**
+
+### onBeforeNavigate.addListener
+
+    chrome.webNavigation.onBeforeNavigate.addListener(function callback, object filters)
+
+The `callback` parameter `details` defines only `tabId`, `url` and `timeStamp`. 
+
+**`frameId` and `parentFrameId` is not supported yet.**
