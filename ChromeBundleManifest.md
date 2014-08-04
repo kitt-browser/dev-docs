@@ -1,23 +1,23 @@
 Chrome bundle manifest compliance
 ---------------------------------
 
-This is a complete list of Chrome manifest features duplicated from
+This is a complete list of Chrome manifest features duplicated from:
 
 [http://developer.chrome.com/extensions/manifest.html](http://developer.chrome.com/extensions/manifest.html)
 
-and modified to mark Kitt implementation specifics and deficiencies. "_KITT: unsupported_" means that the configuration is allowed and parsed, but ignored: there is no logic which would use it.
+It has been annotated to indicate Kitt implementation specifics and deficiencies. "_KITT:unsupported_" means that the configuration is allowed and parsed, but is currently ignored.
 
 <pre>
 <em><strong>// Required</strong></em>
 "<a href="http://developer.chrome.com/extensions/manifest/manifest_version.html">manifest_version</a>": 2,
 "<a href="http://developer.chrome.com/extensions/manifest/version.html">version</a>": "versionString",
-"<a href="http://developer.chrome.com/extensions/manifest/name.html">name</a>": "MyExtension", <em>// KITT: the recommended form is "my-extension-name" or "MyExtensionName". No national characters and <strong>no spaces</strong> please. For historical reasons, name is used in places where such characters would break things. This is a top priority issue.
+"<a href="http://developer.chrome.com/extensions/manifest/name.html">name</a>": "MyExtension", <em>// KITT: the recommended form is "my-extension-name" or "MyExtensionName". No national characters and <strong>no spaces</strong> please. For historical reasons, name is used in places where these characters are not allowed.
 
 <em><strong>// Recommended</strong></em>
 "<a href="http://developer.chrome.com/extensions/manifest/description.html">description</a>": "A plain text description",
 "<a href="http://developer.chrome.com/extensions/manifest/icons.html">icons</a>": {...},
 <em>// KITT:unsupported</em> "default_locale"
-  
+
 <em><strong>// Pick one (or none)</strong></em>
 "<a href="http://developer.chrome.com/extensions/browserAction.html">browser_action</a>": {
   "default_icon": {...},
@@ -42,12 +42,12 @@ and modified to mark Kitt implementation specifics and deficiencies. "_KITT: uns
     "matches" : ["<all_urls>"],
     "exclude_matches" : ["http://www.google.com/*"],
     <em>// KITT:unsupported</em> "css" : [],
-    "js": ["jquery.js", "myscript.js"]  
+    "js": ["jquery.js", "myscript.js"]
     <em>// KITT:unsupported</em> "run_at" <em>// KITT:defaults to "document_end"</em>
     <em>// KITT:unsupported</em> "include_globs"
-    <em>// KITT:unsupported</em> "exclude_globs"  
+    <em>// KITT:unsupported</em> "exclude_globs"
   },
-  // KITT: only first object in content_scripts will be taken
+  // KITT: only the first object in content_scripts will be taken
 ],
 <em>// KITT:unsupported</em> "<a href="http://developer.chrome.com/extensions/contentSecurityPolicy.html">content_security_policy</a>": "policyString",
 <em>// KITT:unsupported</em> "converted_from_user_script": ...,
