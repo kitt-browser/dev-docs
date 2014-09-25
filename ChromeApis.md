@@ -25,8 +25,6 @@ Implemented with the following limitation of callback function:
 
 ```message``` can be only object, i.e. not a string, not an array, etc.
 
-```MessageSender``` does not contain ```url```, only ```id``` and ```tab``` (if sender was content script)
-
 `sendResponse` parameter must be an object, i.e. not a string, not an array, etc.
 
 **Please note:** if you wish to call ```sendResponse``` asynchronously (that is after the listener returns), you must return ```true``` from the event listener function exactly as described in Chrome doc.
@@ -47,12 +45,21 @@ Fully supported
 
 ## [```chrome.tabs```](http://developer.chrome.com/extensions/tabs.html)
 
-**Tab** object referred throughout the API as callback parameter contains only `id`, `url` and `active`.
+**Tab** object returned in ```callback``` has full set of properties as defined by [Chrome API doc](https://developer.chrome.com/extensions/tabs#type-Tab) but some values are not implemented yet or fixed due to natural limitations of mobile application:
+
+- `windowId` is always 0 (browser has only one "window")
+- `higlighted` is always *true*
+- `pinned` is always *false*
+- `incognito` is not supported, hence always *false*
+- `width` and `height` is fixed to 3.5" iPhone size (480x320)
+- `sessionId` is equal to `id`
 
 ### query
 
     chrome.tabs.query(object queryInfo, function callback)
     
+Callback **Tab** parameter has limitations documented above.
+
 ```queryInfo``` recognizes only one filtering property: `active` flag.
 
 ### sendMessage
@@ -81,6 +88,47 @@ If called with nonexistent ```tabId```, nothing will happen. ```runtime.lastErro
     chrome.tabs.remove(integer or array of integer tabIds, function callback)
 
 Fully implemented.
+
+
+### onCreated.addListener
+
+    chrome.tabs.onCreated.addListener(function(Tab tab) {
+      ...
+    })
+
+Callback **Tab** parameter has limitations documented above.
+
+### onUpdated.addListener
+
+    chrome.tabs.onUpdated.addListener(
+      function(integer tabId, object changeInfo, Tab tab) {
+        ...
+     })
+   
+Callback **Tab** parameter has limitations documented above.
+
+`changeInfo` does not track `pinned` state. It does not make sense in mobile design.
+
+### onActivated.addListener
+
+    chrome.tabs.onActivated.addListener(
+      function(object activeInfo) {
+        ...
+    })
+
+`activeInfo` callback object value `windowId` is fixed per documentation above.
+
+### onRemoved.addListener
+
+
+    chrome.tabs.onRemoved.addListener(
+      function(integer tabId, object removeInfo) {
+        ...
+    })
+
+`activeInfo` callback object value `windowId` is fixed per documentation above.
+
+`isWindowClosing` is always *false*.
 
 ## [```chrome.contextMenus```](http://developer.chrome.com/extensions/contextMenus.html)
 
@@ -139,12 +187,12 @@ Context menu id is implemented as 5-character random-ish string.
 
 - ```menuItemId``` every time
 - ```pageUrl``` every time
-- ```linkUrl``` if the menu item context was `link`
-- ```selectionText``` if the menu item context was `selection` or `page`
+- ```linkUrl``` if the menu item **contexts** contained `link`
+- ```selectionText``` if the menu item **contexts** contained `selection` or `page`
 
-***Tab*** contains only ```id```
+***Tab*** is complete but somewhat limited according to description in `chrome.tabs` section
 
-### [`chrome.storage`](https://developer.chrome.com/extensions/storage)
+## [`chrome.storage`](https://developer.chrome.com/extensions/storage)
 
 **StorageArea** `local` is implemented. `sync` is accepted but falls back to `local` at the moment.
 
@@ -175,7 +223,7 @@ all variants of `keys` are supported
 
     StorageArea.clear(function callback)
 
-### [`chrome.browserAction`](https://developer.chrome.com/extensions/browserAction)
+## [`chrome.browserAction`](https://developer.chrome.com/extensions/browserAction)
 
 Implemented as fullscreen popup over the main browser window.
 
@@ -247,34 +295,40 @@ Fully implemented subset:
 - `parentFrameId` fixed to -1 like if there was no parent frame 
 - `type` fixed to "_main_frame_"
 
-### [`chrome.webRequest`](https://developer.chrome.com/extensions/webRequest)
+## [`chrome.webRequest`](https://developer.chrome.com/extensions/webRequest)
 
 > **WARNING:** if you declare any of the following listeners to blocking behavior, do not use `alert()` for debugging the listener functions! Kitt will display the alert but the UI will deadlock afterwards! This is not a Kitt bug/deficiency, but an unavoidable effect of `UIWebView` main thread only invocability. Main thread is also the UI rendering thread.
 
+The `filter` object supports only `urls`, not `types` or `tabId`.
+
 ### onBeforeRequest.addListener
 
-    chrome.webRequest.onBeforeRequest.addListener(callback, filter, opt_extraInfoSpec);
+    chrome.webRequest.onBeforeRequest.addListener(
+      function(object details) {
+        ...
+      }, filter, opt_extraInfoSpec);
     
-`callback` receives detail object with all properties as [documented in Chrome](http://developer.chrome.com/extensions/webRequest#event-onBeforeRequest) but with some limitations:
+`callback` receives `detail` object with all properties as [documented in Chrome](http://developer.chrome.com/extensions/webRequest#event-onBeforeRequest) except `requestBody` which is not provided yet. Some other values may not be always 100% correct:
 
-- `frameId` fixed to 0 like if the request happened in main frame
-- `parentFrameId` fixed to -1 like if there was no parent frame 
-- `type` fixed to "_main_frame_"
-- `requestBody` is null
+- `type` is guessed from request headers, unless the request URL ends with a type-specific suffix. In case of insufficient headers AND missing URL suffix, the default type is **image**
+- `frameId` and `parentFrameId` is based solely on request headers mapping. Result is always correct when `type` is `"main_frame"`. For subframes, there are edge cases where returned `parent` is different from reference Chrome API values.
 
-`BlockingResponse` object recognizes `cancel` and `redirectUrl` parameters
-
-`requestfilter` supports only `urls`
+[`BlockingResponse`](https://developer.chrome.com/extensions/webRequest#type-BlockingResponse) object recognizes `cancel` and `redirectUrl` parameters
 
 `opt_extraInfoSpec` flag `blocking` is fully supported
 
 ### onHeadersReceived.addListener
 
-    chrome.webRequest.onHeadersReceived.addListener(callback, filter, opt_extraInfoSpec);
+    chrome.webRequest.onHeadersReceived.addListener(
+      function(object details) {
+        ...
+      }, filter, opt_extraInfoSpec);
 
 `callback` receives detail object with the same limitations as documented in **onBeforeRequest**, with addition of `responseHeaders`
 
-`BlockingResponse` object recognizes `cancel`, `redirectUrl` and `responseHeaders`
+`BlockingResponse` object recognizes `cancel`, `redirectUrl` and `responseHeaders`.
+
+> **WARNING:** due to certain technical limitations of iOS, `responseHeaders` are ignored at the moment, i.e. the target webview receives the original response headers, not the modified ones.
 
 
 ### handlerBehaviorChanged
@@ -285,6 +339,8 @@ Clears the `UIWebView` cache, so it is expensive. Use reasonably as the Chrome d
 
 ### [`chrome.webNavigation`](https://developer.chrome.com/extensions/webNavigation)
 
+> In general, `processId` parameter has no effect as "output" parameter (listener config) and is fixed to 0 as "input" callback parameter. Every iOS application runs as only one process, hence all tabs are running in it and there is no `processId` differentiation.
+
 For `filter` parameter, the `url` array objects type [**events.UrlFilter**](http://developer.chrome.com/extensions/events.html#type-UrlFilter) is fully implemented.
 
 In the lack of authoritative specification, the following behaviors were confirmed by testing against Chrome browser:
@@ -292,18 +348,95 @@ In the lack of authoritative specification, the following behaviors were confirm
 - no filters defined means unrestricted match (matches all)
 - contrary to the spec wording _"Conditions that the URL ... must satisfy"_ which sounds like **AND** evaluation (all conditions must match), it is really **OR** evaluation (any condition match is enough)
 
-### onCreatedNavigationTarget.addListener
-
-    chrome.webNavigation.onCreatedNavigationTarget.addListener(function callback, object filters)
-
-The `callback` parameter `details` defines only `tabId`, `url` and `timeStamp`. 
-
-**`sourceTabId` and `sourceFrameId` is not supported yet.**
-
 ### onBeforeNavigate.addListener
 
-    chrome.webNavigation.onBeforeNavigate.addListener(function callback, object filters)
+    chrome.webNavigation.onBeforeNavigate.addListener(
+      function(object details) {
+        ...
+      }, object filters)
 
-The `callback` parameter `details` defines only `tabId`, `url` and `timeStamp`. 
+The callback `details` parameter `processId` is 0 (see above)
 
-**`frameId` and `parentFrameId` is not supported yet.**
+### onCreatedNavigationTarget.addListener
+
+    chrome.webNavigation.onCreatedNavigationTarget.addListener(
+      function(object details) {
+        ...
+      }, object filters)
+
+The callback `details` parameter `sourceProcessId` is 0 (see above)
+
+**`sourceFrameId` is not implemented and fixed to -1.**
+
+### onCompleted.addListener
+
+    chrome.webNavigation.onCompleted.addListener(
+      function(object details) {
+        ...
+      }, object filters)
+
+The callback `details` parameter `processId` is 0 (see above)
+
+### getFrame
+
+    chrome.webNavigation.getFrame(object select,
+      function(object details) {
+        ...
+    })
+
+`select.processId` has no effect (see above)
+
+`details.errorOccured` is not implemented and is always **false**.
+
+### getAllFrames
+
+    chrome.webNavigation.getAllFrames(object select,
+      function(array of object details) {
+        ...
+    })
+
+`details.processId` is 0 (see above)
+
+`errorOccured` is not implemented and is always **false**.
+
+## [`chrome.windows`](https://developer.chrome.com/extensions/windows)
+
+> **WORK IN PROGRESS**. Minimal implementation for API coverage. The returned `Window` object is hardcoded as follows. Mind though, that every iOS application has only one window, so the limitation is technically correct. Some form of "virtual windows" UI cocept may be introduced in the future.
+
+- `id` : 0
+- `focused` : true
+- `top, left, width, height` : equals to a 3.5" iPhone fullscreen (480x320) starting at zero coordinate.
+- `incognito` : false
+- `type` : `"normal"`
+- `state` : `"fullscreen"`
+- `alwaysOnTop` : false
+- `sessionId` : `"KittWindow"`
+
+`getInfo` value `populate` is recognized and `window.tabs` array populated with limitations of **Tabs** object documented in `chrome.tabs` section.
+
+### getAll
+
+    chrome.windows.getAll(object getInfo,
+      function(array of Window windows) {
+        ...
+    })
+
+The `windows` array has always only one element.
+    
+### getLastFocused
+
+    chrome.windows.getLastFocused(object getInfo,
+      function(Window window) {
+        ...
+    })
+
+
+### onFocusChanged.addListener
+
+Function provided just for API completeness. The browser application window changes focus only when the whole application changes focus, i.e. goes to background or foreground. Backgrounded application is hibernated, so no code could act on the event. Callback is never called at the moment. May be activated with introduction of "virtual windows" UI concept.
+
+## [`chrome.i18n`](https://developer.chrome.com/extensions/i18n)
+
+> **WORK IN PROGRESS**. Minimal implementation for API coverage. Return value gives back the `messageName` parameter.
+
+    string chrome.i18n.getMessage(string messageName, any substitutions)
