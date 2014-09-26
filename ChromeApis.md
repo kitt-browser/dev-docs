@@ -45,20 +45,20 @@ Fully supported
 
 ## [```chrome.tabs```](http://developer.chrome.com/extensions/tabs.html)
 
-**Tab** object returned in ```callback``` has full set of properties as defined by [Chrome API doc](https://developer.chrome.com/extensions/tabs#type-Tab) but some values are not implemented yet or fixed due to natural limitations of mobile application:
+**Tab** object returned in ```callback``` has the full set of properties defined by [Chrome API doc](https://developer.chrome.com/extensions/tabs#type-Tab)but some values are not implemented yet or have fixed values due to natural limitations of the mobile environment:
 
 - `windowId` is always 0 (browser has only one "window")
 - `higlighted` is always *true*
 - `pinned` is always *false*
 - `incognito` is not supported, hence always *false*
-- `width` and `height` is fixed to 3.5" iPhone size (480x320)
+- `width` and `height` are fixed to 3.5" iPhone size (480x320)
 - `sessionId` is equal to `id`
 
 ### query
 
     chrome.tabs.query(object queryInfo, function callback)
     
-Callback **Tab** parameter has limitations documented above.
+Callback **Tab** parameter has limitations as documented above.
 
 ```queryInfo``` recognizes only one filtering property: `active` flag.
 
@@ -96,7 +96,7 @@ Fully implemented.
       ...
     })
 
-Callback **Tab** parameter has limitations documented above.
+Callback **Tab** parameter has limitations as documented above.
 
 ### onUpdated.addListener
 
@@ -105,9 +105,9 @@ Callback **Tab** parameter has limitations documented above.
         ...
      })
    
-Callback **Tab** parameter has limitations documented above.
+Callback **Tab** parameter has limitations as documented above.
 
-`changeInfo` does not track `pinned` state. It does not make sense in mobile design.
+`changeInfo` does not track `pinned` state since Kitt does not currently support pinned tabs.
 
 ### onActivated.addListener
 
@@ -116,7 +116,7 @@ Callback **Tab** parameter has limitations documented above.
         ...
     })
 
-`activeInfo` callback object value `windowId` is fixed per documentation above.
+`activeInfo` callback object value `windowId` is fixed as documented above.
 
 ### onRemoved.addListener
 
@@ -126,7 +126,7 @@ Callback **Tab** parameter has limitations documented above.
         ...
     })
 
-`activeInfo` callback object value `windowId` is fixed per documentation above.
+`activeInfo` callback object value `windowId` is fixed as documented above.
 
 `isWindowClosing` is always *false*.
 
@@ -187,10 +187,10 @@ Context menu id is implemented as 5-character random-ish string.
 
 - ```menuItemId``` every time
 - ```pageUrl``` every time
-- ```linkUrl``` if the menu item **contexts** contained `link`
-- ```selectionText``` if the menu item **contexts** contained `selection` or `page`
+- ```linkUrl``` if the menu item **contexts** contains `link`
+- ```selectionText``` if the menu item **contexts** contains `selection` or `page`
 
-***Tab*** is complete but somewhat limited according to description in `chrome.tabs` section
+***Tab*** is complete but somewhat limited as described in `chrome.tabs` section
 
 ## [`chrome.storage`](https://developer.chrome.com/extensions/storage)
 
@@ -308,9 +308,9 @@ The `filter` object supports only `urls`, not `types` or `tabId`.
         ...
       }, filter, opt_extraInfoSpec);
     
-`callback` receives `detail` object with all properties as [documented in Chrome](http://developer.chrome.com/extensions/webRequest#event-onBeforeRequest) except `requestBody` which is not provided yet. Some other values may not be always 100% correct:
+`callback` receives `detail` object with all properties as [documented in Chrome](http://developer.chrome.com/extensions/webRequest#event-onBeforeRequest) except `requestBody` which is not provided yet. Some other values may not always be 100% correct:
 
-- `type` is guessed from request headers, unless the request URL ends with a type-specific suffix. In case of insufficient headers AND missing URL suffix, the default type is **image**
+- `type` is guessed from request headers, unless the request URL end with a type-specific file extension. In case of insufficient headers _and_ missing URL suffix, the default type is **image**
 - `frameId` and `parentFrameId` is based solely on request headers mapping. Result is always correct when `type` is `"main_frame"`. For subframes, there are edge cases where returned `parent` is different from reference Chrome API values.
 
 [`BlockingResponse`](https://developer.chrome.com/extensions/webRequest#type-BlockingResponse) object recognizes `cancel` and `redirectUrl` parameters
@@ -339,7 +339,7 @@ Clears the `UIWebView` cache, so it is expensive. Use reasonably as the Chrome d
 
 ### [`chrome.webNavigation`](https://developer.chrome.com/extensions/webNavigation)
 
-> In general, `processId` parameter has no effect as "output" parameter (listener config) and is fixed to 0 as "input" callback parameter. Every iOS application runs as only one process, hence all tabs are running in it and there is no `processId` differentiation.
+> Since iOS applications run as a single process, the `processId` parameter has no effect as an output parameter (listener config) and is always set to 0 as an input callback parameter.
 
 For `filter` parameter, the `url` array objects type [**events.UrlFilter**](http://developer.chrome.com/extensions/events.html#type-UrlFilter) is fully implemented.
 
@@ -386,7 +386,7 @@ The callback `details` parameter `processId` is 0 (see above)
 
 `select.processId` has no effect (see above)
 
-`details.errorOccured` is not implemented and is always **false**.
+`details.errorOccurred` is not implemented and is always **false**.
 
 ### getAllFrames
 
@@ -397,11 +397,11 @@ The callback `details` parameter `processId` is 0 (see above)
 
 `details.processId` is 0 (see above)
 
-`errorOccured` is not implemented and is always **false**.
+`errorOccurred` is not implemented and is always **false**.
 
 ## [`chrome.windows`](https://developer.chrome.com/extensions/windows)
 
-> **WORK IN PROGRESS**. Minimal implementation for API coverage. The returned `Window` object is hardcoded as follows. Mind though, that every iOS application has only one window, so the limitation is technically correct. Some form of "virtual windows" UI cocept may be introduced in the future.
+> **WORK IN PROGRESS**. Minimal implementation for API coverage. The returned `Window` object is hardcoded as follows. Keep in mind that every iOS application has only one window, so this limitation is technically correct. Some form of "virtual windows" may be introduced in the future.
 
 - `id` : 0
 - `focused` : true
@@ -412,7 +412,7 @@ The callback `details` parameter `processId` is 0 (see above)
 - `alwaysOnTop` : false
 - `sessionId` : `"KittWindow"`
 
-`getInfo` value `populate` is recognized and `window.tabs` array populated with limitations of **Tabs** object documented in `chrome.tabs` section.
+`getInfo` value `populate` is recognized and the `window.tabs` array is populated with limitations of **Tabs** object documented in the `chrome.tabs` section.
 
 ### getAll
 
