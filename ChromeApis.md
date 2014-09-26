@@ -310,8 +310,8 @@ The `filter` object supports only `urls`, not `types` or `tabId`.
     
 `callback` receives `detail` object with all properties as [documented in Chrome](http://developer.chrome.com/extensions/webRequest#event-onBeforeRequest) except `requestBody` which is not provided yet. Some other values may not always be 100% correct:
 
-- `type` is guessed from request headers, unless the request URL end with a type-specific file extension. In case of insufficient headers _and_ missing URL suffix, the default type is **image**
-- `frameId` and `parentFrameId` is based solely on request headers mapping. Result is always correct when `type` is `"main_frame"`. For subframes, there are edge cases where returned `parent` is different from reference Chrome API values.
+- `type` is guessed from request headers, unless the request URL end with a type-specific file extension. In case of insufficient headers _and_ missing URL suffix, the fallback type is **image**
+- `frameId` and `parentFrameId` are deduced from the `Referer` request header, if any. Result is always correct when `type` is `"main_frame"`. For subframes, there are edge cases where returned `parent` is different from reference Chrome API values. A request with missing `Referer` is assumed to be originated in `"main_frame"`. 
 
 [`BlockingResponse`](https://developer.chrome.com/extensions/webRequest#type-BlockingResponse) object recognizes `cancel` and `redirectUrl` parameters
 
