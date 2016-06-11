@@ -198,6 +198,8 @@ The context menu ID is implemented as 5-character pseudorandom string.
 
 **StorageArea** `local` is implemented. `sync` is accepted but falls back to `local` at the moment.
 
+For performance reasons, data stored via chrome.storage is cached. Cached data can only be retrieved from the context in which it was stored. It is therefore recommended that all storage be done in the background script and retrieved in other contexts using chrome.runtime.sendMessage.
+
 ### get
 
     StorageArea.get(string or array of string or object keys, function callback)
